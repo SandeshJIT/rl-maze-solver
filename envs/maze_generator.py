@@ -174,37 +174,3 @@ class MazeGenerator:
             plt.show()
 
         return ax
-
-
-if __name__ == "__main__":
-    fig, axes = plt.subplots(1, 3, figsize=(20, 7))
-
-    configs = [
-        {"width": 11, "height": 11, "trap_fraction": 0.10, "wall_removal_fraction": 0.3, "seed": 42},
-        {"width": 15, "height": 15, "trap_fraction": 0.15, "wall_removal_fraction": 0.4, "seed": 99},
-        {"width": 21, "height": 21, "trap_fraction": 0.10, "wall_removal_fraction": 0.35, "seed": 7},
-    ]
-
-    for i, cfg in enumerate(configs):
-        gen = MazeGenerator(**cfg)
-        grid, start, exit_pos = gen.generate()
-        gen.render(
-            ax=axes[i],
-            title=(f"Maze {cfg['width']}x{cfg['height']}  |  "
-                   f"traps={cfg['trap_fraction']*100:.0f}%  "
-                   f"openness={cfg['wall_removal_fraction']*100:.0f}%"),
-            show=False,
-        )
-
-        total_walkable = np.sum(np.isin(grid, [MazeGenerator.PATH, MazeGenerator.START,
-                                                MazeGenerator.EXIT, MazeGenerator.TRAP]))
-        total_wall = np.sum(grid == MazeGenerator.WALL)
-        total_trap = np.sum(grid == MazeGenerator.TRAP)
-        print(f"Maze {i+1}: size={cfg['width']}x{cfg['height']}, "
-              f"start={start}, exit={exit_pos}, "
-              f"walkable={total_walkable}, walls={total_wall}, traps={total_trap}")
-
-    plt.tight_layout()
-    plt.savefig("maze_samples.png", dpi=150, bbox_inches="tight")
-    plt.show()
-    print("\nSaved preview to maze_samples.png")
