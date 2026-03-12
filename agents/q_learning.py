@@ -181,13 +181,17 @@ def evaluate(env, agent, episodes=100):
     return metrics
 
 
-def plot_metrics(metrics, save_path=None):
+def plot_metrics(metrics, save_path=None, title="Q-Learning Training Metrics",
+                 maze_boundaries=None):
     """
     Plot training curves: reward, steps, success rate, and epsilon.
 
     Args:
         metrics: Dictionary from the train() function.
         save_path: Optional path to save the plot image.
+        title: Main title for the plot.
+        maze_boundaries: Optional list of (episode_index, label) tuples
+                         to draw vertical lines separating different mazes.
     """
     import matplotlib.pyplot as plt
 
@@ -197,30 +201,37 @@ def plot_metrics(metrics, save_path=None):
     rewards = np.array(metrics["rewards"])
     rolling_rewards = np.convolve(rewards, np.ones(window) / window, mode="valid")
     axes[0, 0].plot(rolling_rewards, color="steelblue")
-    axes[0, 0].set_title("Reward per Episode (Rolling Avg)")
+    axes[0, 0].set_title("Cumulative Reward Over Training")
     axes[0, 0].set_xlabel("Episode")
-    axes[0, 0].set_ylabel("Reward")
+    axes[0, 0].set_ylabel("Avg Reward (per episode)")
 
     steps = np.array(metrics["steps"])
     rolling_steps = np.convolve(steps, np.ones(window) / window, mode="valid")
     axes[0, 1].plot(rolling_steps, color="coral")
-    axes[0, 1].set_title("Steps per Episode (Rolling Avg)")
+    axes[0, 1].set_title("Steps to Reach Exit")
     axes[0, 1].set_xlabel("Episode")
-    axes[0, 1].set_ylabel("Steps")
+    axes[0, 1].set_ylabel("Avg Steps (per episode)")
 
     successes = np.array(metrics["successes"])
     rolling_success = np.convolve(successes, np.ones(window) / window, mode="valid") * 100
     axes[1, 0].plot(rolling_success, color="seagreen")
-    axes[1, 0].set_title("Success Rate (Rolling Avg)")
+    axes[1, 0].set_title("Maze Solve Rate")
     axes[1, 0].set_xlabel("Episode")
     axes[1, 0].set_ylabel("Success %")
 
     axes[1, 1].plot(metrics["epsilons"], color="mediumpurple")
-    axes[1, 1].set_title("Epsilon Decay")
+    axes[1, 1].set_title("Exploration vs Exploitation")
     axes[1, 1].set_xlabel("Episode")
-    axes[1, 1].set_ylabel("Epsilon")
+    axes[1, 1].set_ylabel("Epsilon (exploration rate)")
 
-    plt.suptitle("Q-Learning Training Metrics", fontsize=16, fontweight="bold")
+    if maze_boundaries:
+        for ax in axes.flat:
+            for ep, label in maze_boundaries:
+                ax.axvline(x=ep, color="gray", linestyle="--", linewidth=1, alpha=0.7)
+                ax.text(ep, ax.get_ylim()[1], f" {label}", fontsize=8,
+                        va="top", ha="left", color="gray", fontweight="bold")
+
+    plt.suptitle(title, fontsize=16, fontweight="bold")
     plt.tight_layout()
 
     if save_path:
@@ -228,8 +239,3 @@ def plot_metrics(metrics, save_path=None):
         print(f"Saved training plot to {save_path}")
 
     plt.show()
-
-
-if __name__ == "__main__":
-    print("Use training/train_qlearning.py to train the agent.")
-    print("This module provides: QLearningAgent, train(), evaluate(), plot_metrics()")
