@@ -17,8 +17,6 @@ from agents.q_learning import QLearningAgent, train, evaluate, plot_metrics
 from utils.visualization import visualize_single
 
 
-# ─── Configuration ───────────────────────────────────────────────────────────
-
 ENV_CONFIG = {
     "width": 21,
     "height": 21,
@@ -45,8 +43,6 @@ TRAIN_CONFIG = {
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "q_learning")
 
-
-# ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def ensure_dir(path):
     """Create directory if it doesn't exist."""
@@ -125,16 +121,9 @@ def train_multi_maze():
                 title="Q-Learning Training Metrics (Multi-Maze)",
                 maze_boundaries=maze_boundaries)
 
-    print("\n" + "-" * 60)
-    print("Visualizing on last trained maze...")
-    last_env = MazeEnv(**{**ENV_CONFIG, "seed": seeds[-1]})
-    visualize_single(last_env, agent,
-                     save_path=os.path.join(OUTPUT_DIR, "q_learning_multi.gif"))
-
     return agent, all_metrics
 
 
-# ─── Main ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     ensure_dir(OUTPUT_DIR)
