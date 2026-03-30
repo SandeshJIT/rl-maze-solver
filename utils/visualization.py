@@ -62,15 +62,16 @@ def draw_maze(ax, grid, height, width):
         ax.axhline(y - 0.5, color="gray", linewidth=0.3)
 
 
-def visualize_single(env, agent, save_path=None, interval=150):
+def visualize_single(env, agent, save_path=None, interval=150, title="Q-Learning"):
     """
     Animate a single agent solving the maze.
 
     Args:
         env: MazeEnv instance.
-        agent: Trained QLearningAgent instance.
+        agent: Trained agent instance with a get_best_action(state) method.
         save_path: Optional path to save as .gif or .mp4.
         interval: Milliseconds between frames.
+        title: Label shown in the animation title bar.
     """
     path = record_agent_path(env, agent)
     grid = env.grid
@@ -84,7 +85,7 @@ def visualize_single(env, agent, save_path=None, interval=150):
     trail, = ax.plot([], [], color="dodgerblue", linewidth=2, alpha=0.5)
     agent_dot, = ax.plot([], [], "bo", markersize=14,
                          markeredgecolor="darkblue", markeredgewidth=2)
-    title = ax.set_title("", fontsize=14, fontweight="bold")
+    title_text = ax.set_title("", fontsize=14, fontweight="bold")
 
     def update(frame):
         current_path = path[:frame + 1]
@@ -95,8 +96,8 @@ def visualize_single(env, agent, save_path=None, interval=150):
         agent_dot.set_data([cols[-1]], [rows[-1]])
 
         status = "SOLVED!" if frame == len(path) - 1 and reached_exit else ""
-        title.set_text(f"Q-Learning  |  Step: {frame}/{len(path)-1}  {status}")
-        return trail, agent_dot, title
+        title_text.set_text(f"{title}  |  Step: {frame}/{len(path)-1}  {status}")
+        return trail, agent_dot, title_text
 
     anim = animation.FuncAnimation(
         fig, update, frames=len(path), interval=interval, blit=True, repeat=False

@@ -2,9 +2,11 @@
 Training Script for Q-Learning Agent
 
 Single entry point to configure, train, evaluate, and save the Q-Learning agent.
-Run: python training/train_qlearning.py
+Run: python training/q_training.py          (test/eval mode)
+     python training/q_training.py --train  (retrain from scratch)
 """
 
+import argparse
 import os
 import sys
 import json
@@ -87,15 +89,25 @@ def train_single_maze():
     return agent, train_metrics
 
 
-def train_multi_maze():
-    """Train across multiple mazes and visualize on the last one."""
+def train_multi_maze(agent=None):
+    """Train across multiple mazes and visualize on the last one.
+
+    Args:
+        agent: Optional pre-trained QLearningAgent to warm-start from (e.g.
+               from train_single_maze). If None a fresh agent is created.
+    """
     print("\n" + "=" * 60)
     print("  Q-Learning — Multi-Maze Training")
     print("=" * 60)
 
     seeds = TRAIN_CONFIG["multi_maze_seeds"]
     episodes_per_maze = TRAIN_CONFIG["episodes"] // len(seeds)
-    agent = QLearningAgent(**AGENT_CONFIG)
+
+    if agent is None:
+        agent = QLearningAgent(**AGENT_CONFIG)
+        print("Starting multi-maze from scratch.")
+    else:
+        print("Warm-starting multi-maze from single-maze trained model.")
 
     all_metrics = {"rewards": [], "steps": [], "successes": [], "epsilons": []}
     maze_boundaries = []
@@ -124,15 +136,51 @@ def train_multi_maze():
     return agent, all_metrics
 
 
+def test():
+    """Load saved Q-tables and run evaluation + visualisation (no training)."""
+    checkpoints = [
+        ("Single", os.path.join(OUTPUT_DIR, "q_table_single.pkl")),
+        ("Multi",  os.path.join(OUTPUT_DIR, "q_table_multi.pkl")),
+    ]
+
+    for label, ckpt_path in checkpoints:
+        if not os.path.exists(ckpt_path):
+            print(f"[{label}] No saved model found at {ckpt_path} — skipping.")
+            continue
+
+        print("\n" + "=" * 60)
+        print(f"  Q-Learning — {label} Maze Evaluation")
+        print("=" * 60)
+
+        env = MazeEnv(**ENV_CONFIG)
+        agent = QLearningAgent(**AGENT_CONFIG)
+        agent.load(ckpt_path)
+        agent.epsilon = 0.0     # pure greedy for evaluation
+
+        print(f"Loaded {ckpt_path}")
+        evaluate(env, agent, episodes=TRAIN_CONFIG["eval_episodes"])
+
+        gif_path = os.path.join(OUTPUT_DIR, f"q_learning_{label.lower()}_test.gif")
+        visualize_single(env, agent, save_path=gif_path)
+
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Q-Learning Maze Solver")
+    parser.add_argument("--train", action="store_true",
+                        help="Retrain from scratch. Omit to run in test/eval mode.")
+    args = parser.parse_args()
+
     ensure_dir(OUTPUT_DIR)
-    save_config(os.path.join(OUTPUT_DIR, "config.json"))
 
-    train_single_maze()
-    train_multi_maze()
+    if args.train:
+        save_config(os.path.join(OUTPUT_DIR, "config.json"))
+        # Single-maze training; returned agent warm-starts multi-maze training.
+        agent, _ = train_single_maze()
+        train_multi_maze(agent=agent)
 
-    print("\n" + "=" * 60)
-    print("  Training Complete")
-    print("=" * 60)
-    print(f"  Outputs saved to: {OUTPUT_DIR}")
+        print("\n" + "=" * 60)
+        print("  Training Complete")
+        print("=" * 60)
+        print(f"  Outputs saved to: {OUTPUT_DIR}")
+    else:
+        test()
