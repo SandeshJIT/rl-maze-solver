@@ -50,7 +50,7 @@ TRAIN_CONFIG = {
     "episodes": 3000,
     "eval_episodes": 100,
     "multi_maze_seeds": [42, 99, 7, 123, 256],
-    "cycle_episodes": 100,  # episodes per maze per cycle before rotating to the next
+    "cycle_episodes": 100,  
 }
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "dqn")
@@ -104,13 +104,12 @@ def train(env, agent, episodes, maze_label=""):
 
             agent.buffer.push(state_vec, action, reward, next_state_vec, float(terminated))
 
-            # Learn every N steps instead of every step (original DQN: every 4 steps)
             if steps % agent.learn_every == 0:
                 loss = agent.learn()
                 if loss is not None:
                     ep_losses.append(loss)
 
-            state_vec = next_state_vec   # reuse without re-encoding next iteration
+            state_vec = next_state_vec  
             total_reward += reward
             steps += 1
 
@@ -304,7 +303,6 @@ def train_multi_maze(agent=None):
     total_eps     = TRAIN_CONFIG["episodes"]
     n_cycles      = total_eps // (len(seeds) * cycle_eps)
 
-    # Pre-build all environments so we can swap them cheaply each cycle.
     envs = [MazeEnv(**{**ENV_CONFIG, "seed": s}) for s in seeds]
 
     if agent is None:
@@ -395,7 +393,6 @@ if __name__ == "__main__":
 
     if args.train:
         save_config(os.path.join(OUTPUT_DIR, "config.json"))
-        # Single-maze training; returned agent warm-starts multi-maze training.
         agent, _ = train_single_maze()
         train_multi_maze()
 

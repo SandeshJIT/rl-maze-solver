@@ -1,0 +1,41 @@
+{
+  "env": {
+    "width": 11,
+    "height": 11,
+    "trap_fraction": 0.1,
+    "wall_removal_fraction": 0.3,
+    "max_steps": 500,
+    "seed": 42
+  },
+  "agent": {
+    "action_size": 4,
+    "lr": 0.0002,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_ratio": 0.2,
+    "value_coef": 0.5,
+    "entropy_coef": 0.05,
+    "max_grad_norm": 0.5,
+    "n_steps": 2048,
+    "ppo_epochs": 10,
+    "mini_batch_size": 64,
+    "hidden_sizes": [
+      256,
+      128
+    ],
+    "target_kl": 0.02,
+    "device": "cpu"
+  },
+  "training": {
+    "total_timesteps": 600000,
+    "eval_episodes": 100,
+    "multi_maze_seeds": [
+      42,
+      99,
+      7,
+      123,
+      256
+    ],
+    "cycle_timesteps": 60000
+  }
+}

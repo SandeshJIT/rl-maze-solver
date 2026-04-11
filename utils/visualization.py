@@ -24,14 +24,17 @@ LEGEND = [
 ]
 
 
-def record_agent_path(env, agent, max_steps=500):
+def record_agent_path(env, agent, max_steps=500, stochastic=False):
     """
     Run the trained agent through the maze and record its path.
 
     Args:
         env: MazeEnv instance.
-        agent: Trained QLearningAgent instance.
+        agent: Trained agent instance.
         max_steps: Safety limit.
+        stochastic: If True, sample from the policy distribution instead of
+                    taking the argmax. Use this for PPO agents to avoid
+                    deterministic cycles.
 
     Returns:
         List of (row, col) positions the agent visited.
@@ -39,14 +42,26 @@ def record_agent_path(env, agent, max_steps=500):
     obs, _ = env.reset()
     state = tuple(obs)
     path = [state]
+    visited = {state: 0}  # state -> first step seen (cycle detection)
 
-    for _ in range(max_steps):
-        action = agent.get_best_action(state)
+    for step in range(max_steps):
+        if stochastic and hasattr(agent, "choose_action"):
+            action, _, _ = agent.choose_action(state)
+        else:
+            action = agent.get_best_action(state)
+
         obs, _, terminated, truncated, _ = env.step(action)
         state = tuple(obs)
         path.append(state)
+
         if terminated or truncated:
             break
+
+        # Cycle detection: if we revisit a state we've seen recently (within
+        # the last 20 steps), the deterministic policy is looping — stop early.
+        if not stochastic and state in visited and (step - visited[state]) <= 20:
+            break
+        visited[state] = step
 
     return path
 
@@ -62,7 +77,8 @@ def draw_maze(ax, grid, height, width):
         ax.axhline(y - 0.5, color="gray", linewidth=0.3)
 
 
-def visualize_single(env, agent, save_path=None, interval=150, title="Q-Learning"):
+def visualize_single(env, agent, save_path=None, interval=150, title="Q-Learning",
+                     stochastic=False):
     """
     Animate a single agent solving the maze.
 
@@ -73,7 +89,7 @@ def visualize_single(env, agent, save_path=None, interval=150, title="Q-Learning
         interval: Milliseconds between frames.
         title: Label shown in the animation title bar.
     """
-    path = record_agent_path(env, agent)
+    path = record_agent_path(env, agent, stochastic=stochastic)
     grid = env.grid
     height, width = grid.shape
     reached_exit = (path[-1] == env.exit_pos)

@@ -204,7 +204,7 @@ class DQNAgent:
         self._h = maze_grid.shape[0]
         self._w = maze_grid.shape[1]
         self._maze_flat  = (maze_grid.astype(np.float32) / 4.0).flatten()
-        # Pre-fill maze portion once; _encode only overwrites the two position slots.
+
         self._encode_buf = np.empty(self.state_size, dtype=np.float32)
         self._encode_buf[:-2] = self._maze_flat
 
@@ -214,7 +214,7 @@ class DQNAgent:
         Uses a pre-filled buffer so only a fast memcpy + two scalar writes
         are needed per call instead of copying 441 floats from scratch.
         """
-        out = self._encode_buf.copy()   # memcpy of pre-filled maze portion
+        out = self._encode_buf.copy()   
         row, col = obs_tuple
         out[-2] = row / self._h
         out[-1] = col / self._w

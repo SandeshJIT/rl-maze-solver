@@ -20,8 +20,8 @@ from utils.visualization import visualize_single
 
 
 ENV_CONFIG = {
-    "width": 21,
-    "height": 21,
+    "width": 11,
+    "height": 11,
     "trap_fraction": 0.10,
     "wall_removal_fraction": 0.3,
     "max_steps": 500,
